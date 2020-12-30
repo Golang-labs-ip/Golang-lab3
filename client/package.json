@@ -1,11 +1,14 @@
 {
-  "name": "balancers",
-  "version": "1.0.1",
-  "description": "none",
+  "name": "chat",
+  "version": "1.0.0",
+  "description": "",
   "main": "examples.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.88.0"
+  }
 }

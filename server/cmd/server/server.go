@@ -3,18 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/roman-mazur/chat-channels-example/server/channels"
 	"net/http"
-
-	"github.com/inovarka/lab3/server/balancers"
 )
 
 type HttpPortNumber int
 
-// BalancerApiServer configures necessary handlers and starts listening on a configured port.
-type BalancerApiServer struct {
+// ChatApiServer configures necessary handlers and starts listening on a configured port.
+type ChatApiServer struct {
 	Port HttpPortNumber
 
-	BalancersHandler balancers.HTTPHandlerFunc
+	ChannelsHandler channels.HttpHandlerFunc
 
 	server *http.Server
 }
@@ -22,16 +21,16 @@ type BalancerApiServer struct {
 // Start will set all handlers and start listening.
 // If this methods succeeds, it does not return until server is shut down.
 // Returned error will never be nil.
-func (s *BalancerApiServer) Start() error {
-	if s.BalancersHandler == nil {
-		return fmt.Errorf("balancers HTTP handler is not defined - cannot start")
+func (s *ChatApiServer) Start() error {
+	if s.ChannelsHandler == nil {
+		return fmt.Errorf("channels HTTP handler is not defined - cannot start")
 	}
 	if s.Port == 0 {
 		return fmt.Errorf("port is not defined")
 	}
 
 	handler := new(http.ServeMux)
-	handler.HandleFunc("/balancers", s.BalancersHandler)
+	handler.HandleFunc("/channels", s.ChannelsHandler)
 
 	s.server = &http.Server{
 		Addr:    fmt.Sprintf(":%d", s.Port),
@@ -42,7 +41,7 @@ func (s *BalancerApiServer) Start() error {
 }
 
 // Stops will shut down previously started HTTP server.
-func (s *BalancerApiServer) Stop() error {
+func (s *ChatApiServer) Stop() error {
 	if s.server == nil {
 		return fmt.Errorf("server was not started")
 	}

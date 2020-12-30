@@ -1,8 +1,8 @@
-module github.com/inovarka/lab3
+module github.com/roman-mazur/chat-channels-example
 
 go 1.15
 
 require (
-	github.com/go-sql-driver/mysql v1.5.0
 	github.com/google/wire v0.4.0
+	github.com/lib/pq v1.8.0
 )

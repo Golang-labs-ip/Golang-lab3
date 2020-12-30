@@ -12,7 +12,7 @@ type errorObject struct {
 
 // WriteJsonOk sends 400 error response with a JSON object describing the error reason.
 func WriteJsonBadRequest(rw http.ResponseWriter, message string) {
-	writeJson(rw, http.StatusBadRequest, &errorObject{Message: message})
+	writeJson(rw, http.StatusBadRequest, &errorObject{Message: "message"})
 }
 
 // WriteJsonOk sends 500 error response.
