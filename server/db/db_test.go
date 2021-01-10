@@ -4,13 +4,11 @@ import "testing"
 
 func TestDbConnection_ConnectionURL(t *testing.T) {
 	conn := &Connection{
-		DbName:     "db1",
-		User:       "user1",
-		Password:   "pass1",
-		Host:       "localhost",
-		DisableSSL: true,
+		DbName:   "test_hotel",
+		User:     "testuser",
+		Password: "12345",
 	}
-	if conn.ConnectionURL() != "postgres://user1:pass1@localhost/db1?sslmode=disable" {
+	if conn.ConnectionURL() != "testuser:12345@/test_hotel" {
 		t.Error("Unexpected connection string")
 	}
 }
