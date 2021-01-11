@@ -36,9 +36,39 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{Db: db}
 }
 
-func (s *Store) ListTablets() (*Tablets, error) {}
+type TabletTelemetry struct {
+  Id        int64       `json:"id"`
+  Name      string      `json:"name"`
+  Telemetry []Telemetry `json:"telemetry"`
+}
 
-func (s *Store) Telemetry(id int64) ([]string, error) {}
+func (s *Store) Telemetry(id int64) (*TabletTelemetry, error) {
+  tabletRow := s.Db.QueryRow("SELECT name FROM tablet WHERE id = $1", id)
+  var name string
+  if err := tabletRow.Scan(&name); err != nil {
+    return nil, err
+  }
+  rows, err := s.Db.Query(`SELECT id, battery, deviceTime, timeStamp, currentVideo
+  FROM telemetry as t
+  INNER JOIN fullList as f ON f.telemetryId = t.id
+  WHERE id = $1`, id)
+
+  if err != nil {
+    return nil, err
+  }
+
+  defer rows.Close()
+
+  var tel = make([]Telemetry, 0)
+  for rows.Next() {
+    var t Telemetry
+    if err := rows.Scan(&t.id, &t.battery, &t.deviceTime, &t.timeStamp, &t.currentVideo); err != nil {
+      return nil, err
+    }
+    tel = append(tel, t)
+  }
+  return &TabletTelemetry{Id: id, Name: name, Telemetry: tel}, nil
+}
 
 func (s *Store) UpdateTablet(id int64) error {
 	t := time.Now()
