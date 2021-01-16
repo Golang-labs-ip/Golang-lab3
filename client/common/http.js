@@ -5,4 +5,5 @@ const Client = (baseUrl) => ({
   patch: (path, data) => request(baseUrl + path, "PATCH", data),
 });
 
+
 module.exports = { Client };

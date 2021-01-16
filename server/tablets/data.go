@@ -1,81 +1,158 @@
 package tablets
 
 import (
-	"time"
 	"database/sql"
-	"fmt"
+	"encoding/json"
 )
 
-type FullList struct {
-	tabletID	int64 `json:"tabletID"`
-	telemetryID	int64 `json:"tabletID"`
+//NullString ...
+type NullString struct {
+	sql.NullString
 }
 
+//MarshalJSON ...
+func (s NullString) MarshalJSON() ([]byte, error) {
+	if !s.Valid {
+		return []byte("null"), nil
+	}
+	return json.Marshal(s.String)
+}
+
+//UnmarshalJSON ...
+func (s *NullString) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		s.String, s.Valid = "", false
+		return nil
+	}
+	s.String, s.Valid = string(data), true
+	return nil
+}
+
+// Tablet ...
 type Tablet struct {
-	id		int64    `json:"id"`
-	name	string `json:"name"`
+	ID			int64		`json:"id"`
+	Name        string		`json:"name"`
+	Telemetry	[]*Device	`json:"telemetry"`
 }
 
-type Telemetry struct {
-	id				int64 `json:"id"`
-	battery			int64 `json:"battery"`
-	deviceTime		string `json:"name"`
-	timeStamp		string `json:"telemetryId"`
-	currentVideo	string `json:"currentVideo"`
+//Device ...
+type Device struct {
+	Battery			int64		`json:"battery"`
+	DeviceTime		string		`json:"deviceTime"`
+	TimeStamp		string		`json:"timeStamp"`
+	CurremtVideo	NullString	`json:"currentVideo"`
 }
 
+//UpdateDev ...
+type UpdateDev struct {
+	ID		int64	`json:"id"`
+	Battery	int64	`json:"battery"`
+}
+
+//Tablets ...
 type Tablets struct {
-	TabletsArr []*Tablet `json:"Tablets"`
+	TabletrsArr []*Tablet `json:"Tablets"`
 }
 
+//Devices ...
+type Devices struct {
+	Devs []*Device `json:"Devices"`
+}
+
+//Store ...
 type Store struct {
 	Db *sql.DB
 }
 
+//NewStore ...
 func NewStore(db *sql.DB) *Store {
 	return &Store{Db: db}
 }
 
-type TabletTelemetry struct {
-  Id        int64       `json:"id"`
-  Name      string      `json:"name"`
-  Telemetry []Telemetry `json:"telemetry"`
+//ListOfTablets returns a list of all balancers
+func (s *Store) ListOfTablets() ([]*Tablet, error) {
+	rows, err := s.Db.Query("SELECT id,name FROM tablet ORDER BY id DESC LIMIT 50")
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var res []*Tablet
+	for rows.Next() {
+		var b Tablet
+		if err := rows.Scan(&b.ID,&b.Name); err != nil {
+			return nil, err
+		}
+		res = append(res, &b)
+	}
+
+	var fullTablets []*Tablet
+	if res == nil {
+		fullTablets = make([]*Tablet, 0)
+	} else {
+		for i := 0; i < len(res); i++ {
+			machines, err := s.GetTelemetryByID(res[i].ID)
+			if err != nil {
+				return nil, err
+			}
+			fullBalancer := Tablet{
+				ID:			res[i].ID,
+				Name:		res[i].Name,
+				Telemetry:	machines,
+			}
+			fullTablets = append(fullTablets, &fullBalancer)
+		}
+
+	}
+	result := &Tablets{fullTablets}
+
+	return result.TabletrsArr, err
 }
 
-func (s *Store) Telemetry(id int64) (*TabletTelemetry, error) {
-  tabletRow := s.Db.QueryRow("SELECT name FROM tablet WHERE id = $1", id)
-  var name string
-  if err := tabletRow.Scan(&name); err != nil {
-    return nil, err
-  }
-  rows, err := s.Db.Query(`SELECT id, battery, deviceTime, timeStamp, currentVideo
-  FROM telemetry as t
-  INNER JOIN fullList as f ON f.telemetryId = t.id
-  WHERE id = $1`, id)
+//GetTelemetryByID ...
+func (s *Store) GetTelemetryByID(id int64) ([]*Device, error) {
+	rows, err := s.Db.Query(`select tele.battery,tele.deviceTime,tele.timeStamp, tele.currentVideo from tablet tab
+	join telemetry tele on tabletId = tab.id
+	where tab.id = ?`, id)
 
-  if err != nil {
-    return nil, err
-  }
+	if err != nil {
+		return nil, err
+	}
 
-  defer rows.Close()
+	defer rows.Close()
 
-  var tel = make([]Telemetry, 0)
-  for rows.Next() {
-    var t Telemetry
-    if err := rows.Scan(&t.id, &t.battery, &t.deviceTime, &t.timeStamp, &t.currentVideo); err != nil {
-      return nil, err
-    }
-    tel = append(tel, t)
-  }
-  return &TabletTelemetry{Id: id, Name: name, Telemetry: tel}, nil
+	var res []*Device
+	for rows.Next() {
+		var b Device
+		if err := rows.Scan(&b.Battery,&b.DeviceTime,&b.TimeStamp,&b.CurremtVideo); err != nil {
+			return nil, err
+		}
+		res = append(res, &b)
+	}
+
+	var fullDevices []*Device
+	if res == nil {
+		fullDevices = make([]*Device, 0)
+	} else {
+		for i := 0; i < len(res); i++ {
+			fullDevice := Device{
+				Battery:        res[i].Battery,
+				DeviceTime:     res[i].DeviceTime,
+				TimeStamp:		res[i].TimeStamp,
+				CurremtVideo:	res[i].CurremtVideo,
+			}
+			fullDevices = append(fullDevices , &fullDevice)
+		}
+
+	}
+
+	result := &Devices{fullDevices}
+	return result.Devs, err
 }
 
-func (s *Store) UpdateTablet(id int64) error {
-	t := time.Now()
-	time := t.Format("2006-06-01T14:15:16.123Z") 
-	fmt.Println(time);
-	_, err := s.Db.Exec("update VirtualMachine set isWorking=$1 where id=$2", time, id)
+//UpdateDevice updates a machine in DB
+func (s *Store) UpdateDevice(id int64, Battery int64) error {
+	_, err := s.Db.Exec("update telemetry set battery=$2 where tabletId=$2", Battery, id)
 	return err
 }
-
-

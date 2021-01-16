@@ -22,7 +22,7 @@ module.exports = async (url, method = "GET", reqData) => {
     req.on("error", reject);
 
     reqData && req.write(JSON.stringify(reqData));
-
+    console.log(reqData);
     req.end();
   });
 };

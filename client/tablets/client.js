@@ -4,9 +4,8 @@ const Client = (baseUrl) => (
   (client = http.Client(baseUrl)),
   {
     ListTablets: () => client.get("/tablets"),
-    UpdateTablet: (id) => client.patch("/tablets", {id}),
+    UpdateMachine: (id, isWorking) => client.patch(`/tablets`, { id, isWorking }),
   }
 );
 
 module.exports = { Client };
-

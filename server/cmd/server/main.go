@@ -7,15 +7,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+
 	"github.com/Golang-labs-ip/Golang-lab3/server/db"
 	_ "github.com/go-sql-driver/mysql"
-	"time"
-	"fmt"
 )
-
 
 var httpPortNumber = flag.Int("p", 8080, "HTTP port number")
 
+// NewDbConnection ...
 func NewDbConnection() (*sql.DB, error) {
 	conn := &db.Connection{
 		DbName:   "test_hotel",
@@ -26,14 +25,14 @@ func NewDbConnection() (*sql.DB, error) {
 }
 
 func main() {
-	t := time.Now()
-	time := t.Format("2006-06-01T14:15:16.123Z") 
-	fmt.Println(time);      	
+	// Parse command line arguments. Port number may be defined with "-p" flag.
+	flag.Parse()
+
 	// Create the server.
-	if server, err := ComposeApiServer(HttpPortNumber(*httpPortNumber)); err == nil {
+	if server, err := ComposeAPIServer(HTTPPortNumber(*httpPortNumber)); err == nil {
 		// Start it.
 		go func() {
-			log.Println("Starting balancers server...")
+			log.Println("Starting tablets server...")
 
 			err := server.Start()
 			if err == http.ErrServerClosed {
@@ -52,7 +51,6 @@ func main() {
 			log.Printf("Error stopping the server: %s", err)
 		}
 	} else {
-		log.Fatalf("Cannot initialize balancers server: %s", err)
+		log.Fatalf("Cannot initialize tablets server: %s", err)
 	}
 }
-

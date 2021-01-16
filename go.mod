@@ -1,5 +1,4 @@
 module github.com/Golang-labs-ip/Golang-lab3
-
 go 1.15
 
 require (

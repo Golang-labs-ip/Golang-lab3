@@ -15,37 +15,37 @@ type HTTPHandlerFunc http.HandlerFunc
 func HTTPHandler(store *Store) HTTPHandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			handleListTablets(store, rw)
+			handleListTableta(store, rw)
 		} else if r.Method == "PATCH" {
-			handleTabletUpdate(r, rw, store)
+			handleDeviceUpdate(r, rw, store)
 		} else {
 			rw.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	}
 }
 
-func handleListTablets(store *Store, rw http.ResponseWriter) {
-	res, err := store.ListTablets()
+func handleListTableta(store *Store, rw http.ResponseWriter) {
+	res, err := store.ListOfTablets()
 	if err != nil {
 		log.Printf("Error making query to the db: %s", err)
-		tools.WriteJsonInternalError(rw)
+		tools.WriteJSONInternalError(rw)
 		return
 	}
-	tools.WriteJsonOk(rw, res)
+	tools.WriteJSONOk(rw, res)
 }
 
-func handleTabletUpdate(r *http.Request, rw http.ResponseWriter, store *Store) {
-	var tablet Tablet
-	if err := json.NewDecoder(r.Body).Decode(&tablet); err != nil {
+func handleDeviceUpdate(r *http.Request, rw http.ResponseWriter, store *Store) {
+	var dev UpdateDev
+	if err := json.NewDecoder(r.Body).Decode(&dev); err != nil {
 		log.Printf("Error decoding machine input: %s", err)
-		tools.WriteJsonBadRequest(rw, "bad JSON payload")
+		tools.WriteJSONBadRequest(rw, "bad JSON payload")
 		return
 	}
-	err := store.UpdateTablet(tablet.id)
+	err := store.UpdateDevice(dev.ID, dev.Battery)
 	if err == nil {
-		tools.WriteJsonOk(rw, &tablet)
+		tools.WriteJSONOk(rw, &dev)
 	} else {
 		log.Printf("Error inserting record: %s", err)
-		tools.WriteJsonInternalError(rw)
+		tools.WriteJSONInternalError(rw)
 	}
 }
