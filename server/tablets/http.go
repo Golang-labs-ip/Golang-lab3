@@ -16,7 +16,7 @@ func HTTPHandler(store *Store) HTTPHandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			handleListTableta(store, rw)
-		} else if r.Method == "PATCH" {
+		} else if r.Method == "POST" {
 			handleDeviceUpdate(r, rw, store)
 		} else {
 			rw.WriteHeader(http.StatusMethodNotAllowed)
@@ -41,7 +41,7 @@ func handleDeviceUpdate(r *http.Request, rw http.ResponseWriter, store *Store) {
 		tools.WriteJSONBadRequest(rw, "bad JSON payload")
 		return
 	}
-	err := store.UpdateDevice(dev.ID, dev.Battery)
+	err := store.UpdateDevice(dev.ID, dev.Battery, dev.CurrentVideo, dev.DeviceTime)
 	if err == nil {
 		tools.WriteJSONOk(rw, &dev)
 	} else {

@@ -2,6 +2,7 @@ package tablets
 
 import (
 	"database/sql"
+	"time"
 	"encoding/json"
 )
 
@@ -37,6 +38,7 @@ type Tablet struct {
 
 //Device ...
 type Device struct {
+	ID				int64		`json:"id"`
 	Battery			int64		`json:"battery"`
 	DeviceTime		string		`json:"deviceTime"`
 	TimeStamp		string		`json:"timeStamp"`
@@ -45,8 +47,10 @@ type Device struct {
 
 //UpdateDev ...
 type UpdateDev struct {
-	ID		int64	`json:"id"`
-	Battery	int64	`json:"battery"`
+	ID				int64	`json:"id"`
+	Battery			int64	`json:"battery"`
+	CurrentVideo	string	`json:"currentVideo"`
+	DeviceTime		string	`json:"deviceTime"`
 }
 
 //Tablets ...
@@ -112,7 +116,7 @@ func (s *Store) ListOfTablets() ([]*Tablet, error) {
 
 //GetTelemetryByID ...
 func (s *Store) GetTelemetryByID(id int64) ([]*Device, error) {
-	rows, err := s.Db.Query(`select tele.battery,tele.deviceTime,tele.timeStamp, tele.currentVideo from tablet tab
+	rows, err := s.Db.Query(`select tele.id, tele.battery, tele.deviceTime, tele.timeStamp, tele.currentVideo from tablet tab
 	join telemetry tele on tabletId = tab.id
 	where tab.id = ?`, id)
 
@@ -125,7 +129,7 @@ func (s *Store) GetTelemetryByID(id int64) ([]*Device, error) {
 	var res []*Device
 	for rows.Next() {
 		var b Device
-		if err := rows.Scan(&b.Battery,&b.DeviceTime,&b.TimeStamp,&b.CurremtVideo); err != nil {
+		if err := rows.Scan(&b.ID,&b.Battery,&b.DeviceTime,&b.TimeStamp,&b.CurremtVideo); err != nil {
 			return nil, err
 		}
 		res = append(res, &b)
@@ -137,6 +141,7 @@ func (s *Store) GetTelemetryByID(id int64) ([]*Device, error) {
 	} else {
 		for i := 0; i < len(res); i++ {
 			fullDevice := Device{
+				ID:        		res[i].ID,
 				Battery:        res[i].Battery,
 				DeviceTime:     res[i].DeviceTime,
 				TimeStamp:		res[i].TimeStamp,
@@ -152,7 +157,9 @@ func (s *Store) GetTelemetryByID(id int64) ([]*Device, error) {
 }
 
 //UpdateDevice updates a machine in DB
-func (s *Store) UpdateDevice(id int64, Battery int64) error {
-	_, err := s.Db.Exec("update telemetry set battery=$2 where tabletId=$2", Battery, id)
+func (s *Store) UpdateDevice(id int64, Battery int64, CurrentVideo string, DeviceTime string) error {
+	t := time.Now()
+	TimeStamp := t.Format("2006-01-02T15:04:05.000Z")
+	_, err := s.Db.Exec("update telemetry set battery=?, currentVideo=?, timeStamp=?, deviceTime=? where id=?", Battery, CurrentVideo, TimeStamp, DeviceTime, id)
 	return err
 }
