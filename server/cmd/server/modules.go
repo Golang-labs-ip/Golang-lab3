@@ -13,9 +13,9 @@ func ComposeAPIServer(port HTTPPortNumber) (*TabletAPIServer, error) {
 	wire.Build(
 		// DB connection provider (defined in main.go).
 		NewDbConnection,
-		// Add providers from balancers package.
+		// Add providers from tablets package.
 		tablets.Providers,
-		// Provide BalancerApiServer instantiating the structure and injecting balancers handler and port number.
+		// Provide TabletApiServer instantiating the structure and injecting tablets handler and port number.
 		wire.Struct(new(TabletAPIServer), "Port", "tabletsHandler"),
 	)
 	return nil, nil

@@ -73,7 +73,7 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{Db: db}
 }
 
-//ListOfTablets returns a list of all balancers
+//ListOfTablets returns a list of all tabletss
 func (s *Store) ListOfTablets() ([]*Tablet, error) {
 	rows, err := s.Db.Query("SELECT id,name FROM tablet ORDER BY id DESC LIMIT 50")
 	if err != nil {
@@ -156,7 +156,7 @@ func (s *Store) GetTelemetryByID(id int64) ([]*Device, error) {
 	return result.Devs, err
 }
 
-//UpdateDevice updates a machine in DB
+//UpdateDevice updates a device in DB
 func (s *Store) UpdateDevice(id int64, Battery int64, CurrentVideo string, DeviceTime string) error {
 	t := time.Now()
 	TimeStamp := t.Format("2006-01-02T15:04:05.000Z")
