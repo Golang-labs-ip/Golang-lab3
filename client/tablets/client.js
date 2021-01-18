@@ -4,7 +4,7 @@ const Client = (baseUrl) => (
   (client = http.Client(baseUrl)),
   {
     ListTablets: () => client.get("/tablets"),
-    UpdateMachine: (id, isWorking) => client.patch(`/tablets`, { id, isWorking }),
+    UpdateDevice: (id, Battery, CurrentVideo,DeviceTime) => client.patch(`/tablets`, { id, Battery, CurrentVideo,DeviceTime }),
   }
 );
 

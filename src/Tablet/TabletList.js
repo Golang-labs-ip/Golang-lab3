@@ -13,7 +13,7 @@ function TabletList(props){
             <thead>
                 <tr>
                     <th className="align-middle" scope="col">Id</th>
-                    <th className="align-middle" scope="col">Name</th>
+                    <th className="align-middle name" scope="col">Name</th>
                     <th className="align-middle" scope="col">Telemetry</th>
                 </tr>
             </thead>
